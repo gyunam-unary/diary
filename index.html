@@ -17,12 +17,17 @@
   button.primary{background:#ffd95a;border-color:#e6bd2e;font-weight:600}
   button:disabled{opacity:.6;cursor:default}
   .grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr)) minmax(0,.65fr)}
-  .cell{aspect-ratio:1/1;border-right:1.5px solid #555;border-bottom:1.5px solid #555;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,5.2vw,30px);background:#fff;min-width:0}
+  .cell{aspect-ratio:1/1;border-right:1.5px solid #555;border-bottom:1.5px solid #555;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,5.2vw,30px);background:#fff;min-width:0;position:relative}
   .cell.f{border-left:1.5px solid #555}
   .cell.top{border-top:1.5px solid #555}
   .cell.ov{color:#d33;background:#fff2f2}
   .cell.line{border-top:3px solid #d33}
   .cell.hl{background:#fff1a8;box-shadow:inset 0 0 0 2px #f0b400}
+  .cell .p{position:absolute;left:3px;bottom:2px;font-size:.68em;line-height:1;pointer-events:none}
+  .cell .p-share{position:absolute;right:5px;bottom:4px;font-size:.55em;line-height:1;pointer-events:none}
+  .cell .qo,.cell .qc{position:absolute;top:-.08em;font-size:1.05em;line-height:1;pointer-events:none}
+  .cell .qo{right:.12em}
+  .cell .qc{left:.02em}
   .mg{display:flex;align-items:flex-end;justify-content:flex-start;padding:0 0 3px 3px;font-size:clamp(16px,5.2vw,30px);line-height:1;min-width:0}
   .mg.v{align-items:center;justify-content:center;padding:0;color:#2a62d9;font-weight:700;font-size:clamp(14px,4.4vw,24px)}
   .mg.ov{color:#d33}
@@ -50,7 +55,7 @@
   <div id="p" class="panel" hidden></div>
   <div id="g" class="grid"></div>
   <p class="note">글 맨 첫 칸은 비우고, 띄어쓰기와 쉼표 같은 문장부호도 한 칸씩 차지해요. 줄 맨 앞에 오는 띄어쓰기는 생략하고, 엔터를 치면 다음 줄 첫 칸부터 이어 써요.<br>
-  마침표(.) 뒤에는 칸을 비우지 않아요. 줄이 꽉 차서 마침표가 다음 줄로 넘어가면 칸 밖 오른쪽에 찍고, 줄 끝에서 띄어 써야 하면 다음 줄 첫 칸을 비우지 않고 칸 밖에 <b style="color:#2a62d9">V</b> 표시를 해요. (칸 밖 표시는 칸 수에 넣지 않아요.)</p>
+  마침표(.) 뒤에는 칸을 비우지 않아요. 마침표가 혼자 한 칸을 쓸 때는 칸의 왼쪽 아래에 찍어요. 줄이 꽉 차서 마침표가 다음 줄로 넘어가면 그 줄 마지막 글자와 같은 칸의 오른쪽 아래에 찍어요. 줄 끝에서 띄어 써야 하면 다음 줄 첫 칸을 비우지 않고 칸 밖에 <b style="color:#2a62d9">V</b> 표시를 해요. (칸 밖 표시는 칸 수에 넣지 않아요.) 여는 큰따옴표는 칸의 오른쪽 위, 닫는 큰따옴표는 왼쪽 위에 두어요.</p>
   <p class="note">띄어쓰기 검사는 완벽하지 않을 수 있어요. 틀리게 알려 주거나 놓치는 곳도 있으니, 눌러 보기 전에 한 번 더 확인해 주세요. 검사는 이 기기 안에서만 이루어지고, 쓴 글은 어디로도 보내지지 않아요.</p>
 </div>
 <script src="spacing.js"></script>
@@ -61,11 +66,28 @@ let hlCells=new Set();
 /* 원고지 규칙
    - 맨 첫 칸은 비워 둔다. 줄 맨 앞의 띄어쓰기는 건너뛴다. 엔터 = 다음 줄 첫 칸부터.
    - 마침표(.) 뒤에는 띄어쓰기 칸을 만들지 않는다.
-   - 줄이 꽉 찬 뒤 마침표가 오면 칸 밖(오른쪽)에 찍는다.
+   - 줄이 꽉 찬 뒤 마침표가 오면 그 줄 마지막 글자와 같은 칸(오른쪽 아래)에 찍는다.
+   - 마침표가 혼자 한 칸을 쓰면 칸의 왼쪽 아래에 찍는다.
+   - 여는 큰따옴표는 칸의 오른쪽 위, 닫는 큰따옴표는 왼쪽 위. 곧은 "는 여닫이를 번갈아 본다. 따옴표는 한 칸을 쓴다.
    - 줄이 꽉 찬 뒤 띄어쓰기가 필요하면 칸 밖에 V 표시를 하고 다음 줄 첫 칸부터 쓴다. */
+function isEmpty(c){return !c||c===""||(!c.ch&&!c.attach&&!c.role);}
+function quoteRole(ch,st){
+  if(ch==="\u201C"||ch==="\u201F"||ch==="\u201E"){st.open=true;return"qopen";}
+  if(ch==="\u201D"){st.open=false;return"qclose";}
+  if(ch==='"'||ch==="\uFF02"){if(!st.open){st.open=true;return"qopen";}st.open=false;return"qclose";}
+  return null;
+}
+function fillCell(d,c){
+  d.textContent="";
+  if(isEmpty(c)||d==null)return;
+  if(c.role==="period"){const s=document.createElement("span");s.className="p";s.textContent=".";d.appendChild(s);return;}
+  if(c.role==="qopen"||c.role==="qclose"){const s=document.createElement("span");s.className=c.role==="qopen"?"qo":"qc";s.textContent=c.role==="qopen"?"\u201C":"\u201D";d.appendChild(s);}
+  else if(c.ch){d.appendChild(document.createTextNode(c.ch));}
+  if(c.attach){const s=document.createElement("span");s.className="p-share";s.textContent=c.attach;d.appendChild(s);}
+}
 function layout(text){
   const T=Array.from(text.replace(/\r/g,""));
-  const cells=[""],cellOf=new Array(T.length).fill(-1),marks={};
+  const cells=[""],cellOf=new Array(T.length).fill(-1),marks={},qst={open:false};
   let rowStart=true,afterPeriod=false,pendingV=false;
   for(let i=0;i<T.length;i++){
     const ch=T[i];
@@ -77,12 +99,20 @@ function layout(text){
       cells.push("");cellOf[i]=cells.length-1;rowStart=false;continue;
     }
     if(ch==="."&&cells.length%COLS===0&&!rowStart){
-      marks[cells.length/COLS-1]=".";pendingV=false;afterPeriod=true;continue;
+      const last=cells[cells.length-1];
+      if(isEmpty(last)){cells[cells.length-1]={ch:".",role:"period"};}
+      else{
+        if(typeof last==="string")cells[cells.length-1]={ch:last,attach:"."};
+        else last.attach=(last.attach||"")+".";
+      }
+      cellOf[i]=cells.length-1;pendingV=false;afterPeriod=true;continue;
     }
     if(pendingV){marks[cells.length/COLS-1]="V";pendingV=false;}
-    cells.push(ch);cellOf[i]=cells.length-1;afterPeriod=(ch===".");rowStart=false;
+    const role=ch==="."?"period":quoteRole(ch,qst);
+    cells.push(role?{ch:ch,role:role}:{ch:ch});
+    cellOf[i]=cells.length-1;afterPeriod=(ch===".");rowStart=false;
   }
-  let used=cells.length;while(used>0&&cells[used-1]==="")used--;
+  let used=cells.length;while(used>0&&isEmpty(cells[used-1]))used--;
   return {cells,used,marks,cellOf};
 }
 function render(){
@@ -99,11 +129,11 @@ function render(){
       if(i>=MAX)d.classList.add('ov');
       if(r===ROWS)d.classList.add('line');
       if(hlCells.has(i))d.classList.add('hl');
-      d.textContent=i<used?cells[i]:"";
+      if(i<used)fillCell(d,cells[i]);
       g.appendChild(d);
     }
     const m=document.createElement('div');m.className='mg';
-    if(marks[r]){m.textContent=marks[r];if(marks[r]==="V")m.classList.add('v');if(r>=ROWS)m.classList.add('ov');m.title=marks[r]==="V"?"여기서 띄어 써요":"마침표";}
+    if(marks[r]){m.textContent=marks[r];if(marks[r]==="V")m.classList.add('v');if(r>=ROWS)m.classList.add('ov');m.title="여기서 띄어 써요";}
     g.appendChild(m);
   }
   const over=used-MAX;
