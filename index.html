@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>그림일기 칸 채우기</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;margin:0;padding:16px;background:#fffdf7;color:#222}
+  .wrap{max-width:560px;margin:0 auto}
+  h1{font-size:22px;margin:8px 0 4px}
+  p.sub{color:#666;margin:0 0 16px;font-size:14px}
+  textarea{width:100%;box-sizing:border-box;padding:12px;font-size:17px;line-height:1.6;border:1px solid #ccc;border-radius:10px;resize:vertical;font-family:inherit}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 16px}
+  .count{font-size:15px}
+  .count.over{color:#d33;font-weight:600}
+  button{padding:8px 14px;font-size:15px;border:1px solid #ccc;background:#fff;border-radius:8px;cursor:pointer}
+  .grid{display:grid;grid-template-columns:repeat(10,1fr);border-top:1.5px solid #555;border-left:1.5px solid #555;background:#fff}
+  .cell{aspect-ratio:1/1;border-right:1.5px solid #555;border-bottom:1.5px solid #555;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,5.5vw,30px)}
+  .cell.ov{color:#d33;background:#fff2f2}
+  .cell.line{border-top:3px solid #d33}
+  .note{font-size:13px;color:#777;margin-top:12px;line-height:1.6}
+  @media print{textarea,.bar,.note,h1,p.sub{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>그림일기 칸 채우기</h1>
+  <p class="sub">글을 쓰면 가로 10칸, 세로 13칸에 한 글자씩 맞춰 들어가요.</p>
+  <textarea id="t" rows="5" placeholder="여기에 일기를 써 주세요"></textarea>
+  <div class="bar"><span id="c" class="count"></span><span><button id="clr">지우기</button> <button onclick="window.print()">인쇄</button></span></div>
+  <div id="g" class="grid"></div>
+  <p class="note">글 맨 첫 칸은 비우고, 띄어쓰기와 문장부호도 한 칸씩 차지해요. 줄 맨 앞에 오는 띄어쓰기는 생략하고, 엔터를 치면 다음 줄 첫 칸부터 이어 써요.</p>
+</div>
+<script>
+const COLS=10,ROWS=13,MAX=COLS*ROWS;
+const t=document.getElementById('t'),g=document.getElementById('g'),c=document.getElementById('c');
+function layout(text){
+  const cells=[""];
+  for(const ch of Array.from(text.replace(/\r/g,""))){
+    if(ch==="\n"){const r=cells.length%COLS;if(r)for(let i=r;i<COLS;i++)cells.push("");continue;}
+    const sp=ch===" "||ch==="\t"||ch==="\u3000";
+    if(sp&&cells.length%COLS===0)continue;
+    cells.push(sp?"":ch);
+  }
+  let used=cells.length;while(used>0&&cells[used-1]==="")used--;
+  return {cells,used};
+}
+function render(){
+  const {cells,used}=layout(t.value);
+  const total=Math.max(MAX,Math.ceil(used/COLS)*COLS);
+  g.innerHTML="";
+  for(let i=0;i<total;i++){
+    const d=document.createElement('div');d.className='cell';
+    if(i>=MAX)d.classList.add('ov');
+    if(i>=MAX&&i<MAX+COLS)d.classList.add('line');
+    d.textContent=i<used?cells[i]:"";
+    g.appendChild(d);
+  }
+  const over=used-MAX;
+  c.textContent=over>0?`130칸을 ${over}칸 넘었어요 (빨간 칸)`:`사용 ${used} / ${MAX}칸 · 남은 칸 ${MAX-used}칸`;
+  c.className='count'+(over>0?' over':'');
+  try{localStorage.setItem('diary',t.value)}catch(e){}
+}
+t.value=(()=>{try{return localStorage.getItem('diary')||""}catch(e){return ""}})();
+t.addEventListener('input',render);
+document.getElementById('clr').onclick=()=>{t.value="";render();t.focus();};
+render();
+</script>
+</body>
+</html>
