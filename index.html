@@ -16,20 +16,20 @@
   button{padding:8px 14px;font-size:15px;border:1px solid #ccc;background:#fff;border-radius:8px;cursor:pointer;font-family:inherit}
   button.primary{background:#ffd95a;border-color:#e6bd2e;font-weight:600}
   button:disabled{opacity:.6;cursor:default}
-  .grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr)) minmax(0,.65fr)}
-  .cell{aspect-ratio:1/1;border-right:1.5px solid #555;border-bottom:1.5px solid #555;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,5.2vw,30px);background:#fff;min-width:0;position:relative}
-  .cell.f{border-left:1.5px solid #555}
-  .cell.top{border-top:1.5px solid #555}
+  /* 원고지: 모든 칸은 정수 px 크기의 같은 정사각형(border-box). 선은 1px로 칸 오른쪽·아래 + 판 왼쪽·위 */
+  .sheet{--cs:48px;--mw:31px;--ln:#3a3a3a;display:flex;align-items:flex-start;justify-content:center}
+  .board{display:grid;grid-template-columns:repeat(10,var(--cs));grid-auto-rows:var(--cs);border-top:1px solid var(--ln);border-left:1px solid var(--ln);background:#fff;flex:none}
+  .cell{box-sizing:border-box;width:var(--cs);height:var(--cs);min-width:var(--cs);min-height:var(--cs);max-width:var(--cs);max-height:var(--cs);flex:none;border-right:1px solid var(--ln);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs)*.6);line-height:1;background:#fff;position:relative;overflow:hidden;margin:0;padding:0}
   .cell.ov{color:#d33;background:#fff2f2}
-  .cell.line{border-top:3px solid #d33}
+  .cell.line{box-shadow:inset 0 2px 0 #d33}
   .cell.hl{background:#fff1a8;box-shadow:inset 0 0 0 2px #f0b400}
-  .cell .p{position:absolute;left:3px;bottom:2px;font-size:.68em;line-height:1;pointer-events:none}
-  .cell .p-share{position:absolute;right:5px;bottom:4px;font-size:.55em;line-height:1;pointer-events:none}
-  .cell .qo,.cell .qc{position:absolute;top:-.08em;font-size:1.05em;line-height:1;pointer-events:none}
-  .cell .qo{right:.12em}
-  .cell .qc{left:.02em}
-  .mg{display:flex;align-items:flex-end;justify-content:flex-start;padding:0 0 3px 3px;font-size:clamp(16px,5.2vw,30px);line-height:1;min-width:0}
-  .mg.v{align-items:center;justify-content:center;padding:0;color:#2a62d9;font-weight:700;font-size:clamp(14px,4.4vw,24px)}
+  .cell .p{position:absolute;left:12%;bottom:6%;font-size:.75em;line-height:1;pointer-events:none}
+  .cell .p-share{position:absolute;right:8%;bottom:6%;font-size:.6em;line-height:1;pointer-events:none}
+  .cell .qo,.cell .qc{position:absolute;top:6%;font-size:.9em;line-height:.8;pointer-events:none}
+  .cell .qo{right:10%}
+  .cell .qc{left:10%}
+  .mgcol{display:grid;grid-template-columns:var(--mw);grid-auto-rows:var(--cs);padding-top:1px;flex:none}
+  .mg{box-sizing:border-box;width:var(--mw);height:var(--cs);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs)*.5);line-height:1;color:#2a62d9;font-weight:700;overflow:hidden}
   .mg.ov{color:#d33}
   .note{font-size:13px;color:#777;margin-top:12px;line-height:1.6}
   .panel{margin:0 0 16px;border:1px solid #e6d9a8;background:#fffbea;border-radius:10px;padding:12px;font-size:15px}
@@ -43,7 +43,7 @@
   .sg .arrow{color:#999;margin:0 4px}
   .sg button{padding:6px 12px;font-size:14px}
   .small{font-size:12px;color:#8a7a3a;margin-top:8px;line-height:1.5}
-  @media print{textarea,.bar,.note,h1,p.sub,.panel{display:none}body{background:#fff;padding:0}.cell.hl{background:#fff;box-shadow:none}}
+  @media print{textarea,.bar,.note,h1,p.sub,.panel{display:none}body{background:#fff;padding:0}.wrap{max-width:none}.sheet{--cs:60px !important;--mw:39px !important}.cell.hl{background:#fff;box-shadow:none}}
 </style>
 </head>
 <body>
@@ -53,7 +53,7 @@
   <textarea id="t" rows="5" placeholder="여기에 일기를 써 주세요"></textarea>
   <div class="bar"><span id="c" class="count"></span><span><button id="chk" class="primary">띄어쓰기 검사</button> <button id="clr">지우기</button> <button onclick="window.print()">인쇄</button></span></div>
   <div id="p" class="panel" hidden></div>
-  <div id="g" class="grid"></div>
+  <div class="sheet" id="sheet"><div id="g" class="board"></div><div id="mgc" class="mgcol"></div></div>
   <p class="note">글 맨 첫 칸은 비우고, 띄어쓰기와 쉼표 같은 문장부호도 한 칸씩 차지해요. 줄 맨 앞에 오는 띄어쓰기는 생략하고, 엔터를 치면 다음 줄 첫 칸부터 이어 써요.<br>
   마침표(.) 뒤에는 칸을 비우지 않아요. 마침표가 혼자 한 칸을 쓸 때는 칸의 왼쪽 아래에 찍어요. 줄이 꽉 차서 마침표가 다음 줄로 넘어가면 그 줄 마지막 글자와 같은 칸의 오른쪽 아래에 찍어요. 줄 끝에서 띄어 써야 하면 다음 줄 첫 칸을 비우지 않고 칸 밖에 <b style="color:#2a62d9">V</b> 표시를 해요. (칸 밖 표시는 칸 수에 넣지 않아요.) 여는 큰따옴표는 칸의 오른쪽 위, 닫는 큰따옴표는 왼쪽 위에 두어요.</p>
   <p class="note">띄어쓰기 검사는 완벽하지 않을 수 있어요. 틀리게 알려 주거나 놓치는 곳도 있으니, 눌러 보기 전에 한 번 더 확인해 주세요. 검사는 이 기기 안에서만 이루어지고, 쓴 글은 어디로도 보내지지 않아요.</p>
@@ -115,17 +115,23 @@ function layout(text){
   let used=cells.length;while(used>0&&isEmpty(cells[used-1]))used--;
   return {cells,used,marks,cellOf};
 }
-function render(){
+function sizeSheet(){
+  const sh=document.getElementById('sheet');if(!sh)return;
+  const avail=sh.parentElement.clientWidth;
+  const cs=Math.max(20,Math.min(52,Math.floor((avail-2)/10.65)));
+  sh.style.setProperty('--cs',cs+'px');
+  sh.style.setProperty('--mw',Math.round(cs*.65)+'px');
+}
+function render(){sizeSheet();
   const {cells,used,marks,cellOf}=layout(t.value);
   let rows=Math.max(ROWS,Math.ceil(used/COLS));
   for(const r of Object.keys(marks))rows=Math.max(rows,(+r)+1);
-  g.innerHTML="";
+  const mgc=document.getElementById('mgc');
+  g.innerHTML="";mgc.innerHTML="";
   for(let r=0;r<rows;r++){
     for(let k=0;k<COLS;k++){
       const i=r*COLS+k;
       const d=document.createElement('div');d.className='cell';
-      if(k===0)d.classList.add('f');
-      if(r===0)d.classList.add('top');
       if(i>=MAX)d.classList.add('ov');
       if(r===ROWS)d.classList.add('line');
       if(hlCells.has(i))d.classList.add('hl');
@@ -133,8 +139,8 @@ function render(){
       g.appendChild(d);
     }
     const m=document.createElement('div');m.className='mg';
-    if(marks[r]){m.textContent=marks[r];if(marks[r]==="V")m.classList.add('v');if(r>=ROWS)m.classList.add('ov');m.title="여기서 띄어 써요";}
-    g.appendChild(m);
+    if(marks[r]){m.textContent=marks[r];if(r>=ROWS)m.classList.add('ov');m.title="여기서 띄어 써요";}
+    mgc.appendChild(m);
   }
   const over=used-MAX;
   c.textContent=over>0?`130칸을 ${over}칸 넘었어요 (빨간 칸)`:`사용 ${used} / ${MAX}칸 · 남은 칸 ${MAX-used}칸`;
@@ -203,6 +209,7 @@ t.addEventListener('input',()=>{
   }
   render();
 });
+window.addEventListener('resize',sizeSheet);sizeSheet();
 document.getElementById('clr').onclick=()=>{t.value="";checkedText=null;sugg=[];hlCells=new Set();panel.hidden=true;render();t.focus();};
 render();
 </script>
