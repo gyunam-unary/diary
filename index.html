@@ -13,13 +13,32 @@
   .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 16px}
   .count{font-size:15px}
   .count.over{color:#d33;font-weight:600}
-  button{padding:8px 14px;font-size:15px;border:1px solid #ccc;background:#fff;border-radius:8px;cursor:pointer}
-  .grid{display:grid;grid-template-columns:repeat(10,1fr);border-top:1.5px solid #555;border-left:1.5px solid #555;background:#fff}
-  .cell{aspect-ratio:1/1;border-right:1.5px solid #555;border-bottom:1.5px solid #555;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,5.5vw,30px)}
+  button{padding:8px 14px;font-size:15px;border:1px solid #ccc;background:#fff;border-radius:8px;cursor:pointer;font-family:inherit}
+  button.primary{background:#ffd95a;border-color:#e6bd2e;font-weight:600}
+  button:disabled{opacity:.6;cursor:default}
+  .grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr)) minmax(0,.65fr)}
+  .cell{aspect-ratio:1/1;border-right:1.5px solid #555;border-bottom:1.5px solid #555;display:flex;align-items:center;justify-content:center;font-size:clamp(16px,5.2vw,30px);background:#fff;min-width:0}
+  .cell.f{border-left:1.5px solid #555}
+  .cell.top{border-top:1.5px solid #555}
   .cell.ov{color:#d33;background:#fff2f2}
   .cell.line{border-top:3px solid #d33}
+  .cell.hl{background:#fff1a8;box-shadow:inset 0 0 0 2px #f0b400}
+  .mg{display:flex;align-items:flex-end;justify-content:flex-start;padding:0 0 3px 3px;font-size:clamp(16px,5.2vw,30px);line-height:1;min-width:0}
+  .mg.v{align-items:center;justify-content:center;padding:0;color:#2a62d9;font-weight:700;font-size:clamp(14px,4.4vw,24px)}
+  .mg.ov{color:#d33}
   .note{font-size:13px;color:#777;margin-top:12px;line-height:1.6}
-  @media print{textarea,.bar,.note,h1,p.sub{display:none}body{background:#fff}}
+  .panel{margin:0 0 16px;border:1px solid #e6d9a8;background:#fffbea;border-radius:10px;padding:12px;font-size:15px}
+  .panel[hidden]{display:none}
+  .panel .head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .panel .msg{line-height:1.5}
+  .sg{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px dashed #e6d9a8}
+  .sg .txt{flex:1 1 200px;min-width:0;line-height:1.5}
+  .sg .why{display:block;font-size:12px;color:#8a7a3a}
+  .sg b{background:#fff;border:1px solid #e0d6b0;border-radius:6px;padding:1px 6px;font-weight:600;word-break:keep-all}
+  .sg .arrow{color:#999;margin:0 4px}
+  .sg button{padding:6px 12px;font-size:14px}
+  .small{font-size:12px;color:#8a7a3a;margin-top:8px;line-height:1.5}
+  @media print{textarea,.bar,.note,h1,p.sub,.panel{display:none}body{background:#fff;padding:0}.cell.hl{background:#fff;box-shadow:none}}
 </style>
 </head>
 <body>
@@ -27,43 +46,134 @@
   <h1>그림일기 칸 채우기</h1>
   <p class="sub">글을 쓰면 가로 10칸, 세로 13칸에 한 글자씩 맞춰 들어가요.</p>
   <textarea id="t" rows="5" placeholder="여기에 일기를 써 주세요"></textarea>
-  <div class="bar"><span id="c" class="count"></span><span><button id="clr">지우기</button> <button onclick="window.print()">인쇄</button></span></div>
+  <div class="bar"><span id="c" class="count"></span><span><button id="chk" class="primary">띄어쓰기 검사</button> <button id="clr">지우기</button> <button onclick="window.print()">인쇄</button></span></div>
+  <div id="p" class="panel" hidden></div>
   <div id="g" class="grid"></div>
-  <p class="note">글 맨 첫 칸은 비우고, 띄어쓰기와 문장부호도 한 칸씩 차지해요. 줄 맨 앞에 오는 띄어쓰기는 생략하고, 엔터를 치면 다음 줄 첫 칸부터 이어 써요.</p>
+  <p class="note">글 맨 첫 칸은 비우고, 띄어쓰기와 쉼표 같은 문장부호도 한 칸씩 차지해요. 줄 맨 앞에 오는 띄어쓰기는 생략하고, 엔터를 치면 다음 줄 첫 칸부터 이어 써요.<br>
+  마침표(.) 뒤에는 칸을 비우지 않아요. 줄이 꽉 차서 마침표가 다음 줄로 넘어가면 칸 밖 오른쪽에 찍고, 줄 끝에서 띄어 써야 하면 다음 줄 첫 칸을 비우지 않고 칸 밖에 <b style="color:#2a62d9">V</b> 표시를 해요. (칸 밖 표시는 칸 수에 넣지 않아요.)</p>
+  <p class="note">띄어쓰기 검사는 완벽하지 않을 수 있어요. 틀리게 알려 주거나 놓치는 곳도 있으니, 눌러 보기 전에 한 번 더 확인해 주세요. 검사는 이 기기 안에서만 이루어지고, 쓴 글은 어디로도 보내지지 않아요.</p>
 </div>
+<script src="spacing.js"></script>
 <script>
 const COLS=10,ROWS=13,MAX=COLS*ROWS;
-const t=document.getElementById('t'),g=document.getElementById('g'),c=document.getElementById('c');
+const t=document.getElementById('t'),g=document.getElementById('g'),c=document.getElementById('c'),panel=document.getElementById('p'),chk=document.getElementById('chk');
+let hlCells=new Set();
+/* 원고지 규칙
+   - 맨 첫 칸은 비워 둔다. 줄 맨 앞의 띄어쓰기는 건너뛴다. 엔터 = 다음 줄 첫 칸부터.
+   - 마침표(.) 뒤에는 띄어쓰기 칸을 만들지 않는다.
+   - 줄이 꽉 찬 뒤 마침표가 오면 칸 밖(오른쪽)에 찍는다.
+   - 줄이 꽉 찬 뒤 띄어쓰기가 필요하면 칸 밖에 V 표시를 하고 다음 줄 첫 칸부터 쓴다. */
 function layout(text){
-  const cells=[""];
-  for(const ch of Array.from(text.replace(/\r/g,""))){
-    if(ch==="\n"){const r=cells.length%COLS;if(r)for(let i=r;i<COLS;i++)cells.push("");continue;}
+  const T=Array.from(text.replace(/\r/g,""));
+  const cells=[""],cellOf=new Array(T.length).fill(-1),marks={};
+  let rowStart=true,afterPeriod=false,pendingV=false;
+  for(let i=0;i<T.length;i++){
+    const ch=T[i];
+    if(ch==="\n"){const r=cells.length%COLS;if(r)for(let k=r;k<COLS;k++)cells.push("");afterPeriod=false;pendingV=false;rowStart=true;continue;}
     const sp=ch===" "||ch==="\t"||ch==="\u3000";
-    if(sp&&cells.length%COLS===0)continue;
-    cells.push(sp?"":ch);
+    if(sp){
+      if(afterPeriod)continue;
+      if(cells.length%COLS===0){ if(!rowStart)pendingV=true; continue; }
+      cells.push("");cellOf[i]=cells.length-1;rowStart=false;continue;
+    }
+    if(ch==="."&&cells.length%COLS===0&&!rowStart){
+      marks[cells.length/COLS-1]=".";pendingV=false;afterPeriod=true;continue;
+    }
+    if(pendingV){marks[cells.length/COLS-1]="V";pendingV=false;}
+    cells.push(ch);cellOf[i]=cells.length-1;afterPeriod=(ch===".");rowStart=false;
   }
   let used=cells.length;while(used>0&&cells[used-1]==="")used--;
-  return {cells,used};
+  return {cells,used,marks,cellOf};
 }
 function render(){
-  const {cells,used}=layout(t.value);
-  const total=Math.max(MAX,Math.ceil(used/COLS)*COLS);
+  const {cells,used,marks,cellOf}=layout(t.value);
+  let rows=Math.max(ROWS,Math.ceil(used/COLS));
+  for(const r of Object.keys(marks))rows=Math.max(rows,(+r)+1);
   g.innerHTML="";
-  for(let i=0;i<total;i++){
-    const d=document.createElement('div');d.className='cell';
-    if(i>=MAX)d.classList.add('ov');
-    if(i>=MAX&&i<MAX+COLS)d.classList.add('line');
-    d.textContent=i<used?cells[i]:"";
-    g.appendChild(d);
+  for(let r=0;r<rows;r++){
+    for(let k=0;k<COLS;k++){
+      const i=r*COLS+k;
+      const d=document.createElement('div');d.className='cell';
+      if(k===0)d.classList.add('f');
+      if(r===0)d.classList.add('top');
+      if(i>=MAX)d.classList.add('ov');
+      if(r===ROWS)d.classList.add('line');
+      if(hlCells.has(i))d.classList.add('hl');
+      d.textContent=i<used?cells[i]:"";
+      g.appendChild(d);
+    }
+    const m=document.createElement('div');m.className='mg';
+    if(marks[r]){m.textContent=marks[r];if(marks[r]==="V")m.classList.add('v');if(r>=ROWS)m.classList.add('ov');m.title=marks[r]==="V"?"여기서 띄어 써요":"마침표";}
+    g.appendChild(m);
   }
   const over=used-MAX;
   c.textContent=over>0?`130칸을 ${over}칸 넘었어요 (빨간 칸)`:`사용 ${used} / ${MAX}칸 · 남은 칸 ${MAX-used}칸`;
   c.className='count'+(over>0?' over':'');
   try{localStorage.setItem('diary',t.value)}catch(e){}
 }
+
+/* ---------- 띄어쓰기 검사 ---------- */
+let sugg=[],checkedText=null,busy=false;
+const esc=s=>s.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const LABEL={add:'띄어 써요',join:'붙여 써요',dup:'한 칸만 띄어요'};
+function setHl(list){
+  hlCells=new Set();
+  if(list.length){
+    const {cellOf}=layout(t.value);
+    for(const s of list)for(let i=Math.max(0,s.from-1);i<=s.to&&i<cellOf.length;i++)if(cellOf[i]>=0)hlCells.add(cellOf[i]);
+  }
+}
+function showPanel(html){panel.innerHTML=html;panel.hidden=false;}
+function drawResult(modelOK){
+  setHl(sugg);render();
+  if(!sugg.length){
+    showPanel(`<div class="msg">✅ 고칠 곳을 찾지 못했어요. 잘 썼어요!</div>`+(modelOK?'':`<div class="small">※ 검사 도우미를 불러오지 못해 기본 규칙(조사 붙여 쓰기 등)만 확인했어요.</div>`)+`<div class="small">검사가 완벽하지는 않아요.</div>`);
+    return;
+  }
+  let h=`<div class="head"><span class="msg">🔎 확인해 볼 곳이 <b>${sugg.length}</b>군데 있어요. 노란 칸이 그 자리예요.</span><button id="all" class="primary">모두 고치기</button></div>`;
+  sugg.forEach((s,i)=>{
+    h+=`<div class="sg"><span class="txt"><b>${esc(s.before)}</b><span class="arrow">→</span><b>${esc(s.after)}</b><span class="why">${LABEL[s.type]} · ${esc(s.why)}</span></span><button data-i="${i}">고치기</button></div>`;
+  });
+  h+=`<div class="small">${modelOK?'':'※ 검사 도우미를 불러오지 못해 기본 규칙만 확인했어요. '}검사 결과는 틀릴 수도 있어요. 맞는 것만 골라서 고쳐 주세요. (마침표 뒤 띄어쓰기는 칸에 표시되지 않으므로 검사하지 않아요.)</div>`;
+  showPanel(h);
+}
+async function runCheck(first){
+  if(busy)return;busy=true;chk.disabled=true;
+  let modelOK=Spacer.ready();
+  try{
+    if(!modelOK){
+      showPanel('<div class="msg">⏳ 검사 도우미를 불러오는 중이에요. 처음 한 번만 걸려요. (약 2.4MB)</div>');
+      await new Promise(r=>setTimeout(r,30));
+      try{await Spacer.load('spacer-model.bin?v=1');modelOK=true;}catch(e){modelOK=false;}
+    }
+    showPanel('<div class="msg">⏳ 띄어쓰기를 살펴보는 중이에요…</div>');
+    await new Promise(r=>setTimeout(r,30));
+    checkedText=t.value;
+    sugg=Spacer.check(checkedText,{model:modelOK});
+    drawResult(modelOK);
+  }catch(e){
+    showPanel('<div class="msg">앗, 검사 중에 문제가 생겼어요. 잠시 뒤에 다시 눌러 주세요.</div>');
+  }finally{busy=false;chk.disabled=false;}
+}
+chk.onclick=()=>runCheck();
+panel.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||busy)return;
+  if(b.id==='all'){t.value=Spacer.apply(t.value,sugg);}
+  else if(b.dataset.i!==undefined){t.value=Spacer.apply(t.value,[sugg[+b.dataset.i]]);}
+  else return;
+  hlCells=new Set();render();
+  // 고친 뒤 다시 검사해서 목록을 새로 보여 줘요
+  sugg=Spacer.check(t.value,{model:Spacer.ready()});checkedText=t.value;drawResult(Spacer.ready());
+});
 t.value=(()=>{try{return localStorage.getItem('diary')||""}catch(e){return ""}})();
-t.addEventListener('input',render);
-document.getElementById('clr').onclick=()=>{t.value="";render();t.focus();};
+t.addEventListener('input',()=>{
+  if(checkedText!==null&&checkedText!==t.value){
+    checkedText=null;sugg=[];hlCells=new Set();
+    showPanel('<div class="msg">글이 바뀌었어요. 다시 <b>띄어쓰기 검사</b>를 눌러 주세요.</div>');
+  }
+  render();
+});
+document.getElementById('clr').onclick=()=>{t.value="";checkedText=null;sugg=[];hlCells=new Set();panel.hidden=true;render();t.focus();};
 render();
 </script>
 </body>
